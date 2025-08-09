@@ -33,6 +33,24 @@ public class User {
 
     private String profilePicture;
 
+    private String Role;
+
+    public String getRole() {
+        return Role;
+    }
+
+    public void setRole(String role) {
+        Role = role;
+    }
+
+    public User(String password, String name, String userEmail, String profilePicture, String role) {
+        this.password = password;
+        this.name = name;
+        this.userEmail = userEmail;
+        this.profilePicture = profilePicture;
+        Role = role;
+    }
+
     public String getProfilePicture() {
         return profilePicture;
     }

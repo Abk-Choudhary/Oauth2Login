@@ -8,12 +8,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -31,10 +34,29 @@ import java.util.Arrays;
 public class SecurityConfiguration {
 
     UserRepositories userRepositories;
+    CustomUserDetailsService userDetailsService;
 
     @Autowired
+    public SecurityConfiguration(UserRepositories userRepositories, CustomUserDetailsService userDetailsService) {
+        this.userRepositories = userRepositories;
+        this.userDetailsService = userDetailsService;
+    }
+
+
     public SecurityConfiguration(UserRepositories userRepositories) {
         this.userRepositories = userRepositories;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder(){
+        return new BCryptPasswordEncoder();
+    }
+
+    public DaoAuthenticationProvider authenticationProvider()
+    {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
     }
 
     @Bean
@@ -48,7 +70,7 @@ public class SecurityConfiguration {
 
         httpSecurity.oauth2Login(oauth2-> {
             oauth2.loginPage("http://localhost:5173");
-
+            //oauth2.loginProcessingUrl("/public/user/login");
 
 //            oauth2.successHandler(new AuthenticationSuccessHandler() {
 //                @Override
@@ -71,7 +93,7 @@ public class SecurityConfiguration {
                             user.setName(name);
                             user.setUserEmail(email);
                             user.setProfilePicture(defaultOAuth2User.getAttribute("avatar_url"));
-
+                            user.setRole("ROLE_USER");
                             //System.out.println(user.getProfilePicture());
 
                             User user1 = userRepositories.findByUserEmail(email);
